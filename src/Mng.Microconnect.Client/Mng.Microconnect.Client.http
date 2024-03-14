@@ -1,0 +1,6 @@
+@Mng.Microconnect.Client_HostAddress = http://localhost:5181
+
+GET {{Mng.Microconnect.Client_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

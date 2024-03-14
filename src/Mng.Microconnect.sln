@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mng.Microconnect", "Mng.Microconnect\Mng.Microconnect.csproj", "{7688C1EA-6F40-4AF8-8AD4-B0AA2C13E746}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mng.Microconnect.Client", "Mng.Microconnect.Client\Mng.Microconnect.Client.csproj", "{C815242F-EB63-4FA9-875E-E531F6E0F847}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mng.Microconnect.Server", "Mng.Microconnect.Server\Mng.Microconnect.Server.csproj", "{B56AD6B5-FEAC-466F-993C-A3932068CE2B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mng.Microconnect.Server.Contract", "Mng.Microconnect.Server.Contract\Mng.Microconnect.Server.Contract.csproj", "{B4D785FB-D15D-47F7-A10D-57A87849DA8A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7688C1EA-6F40-4AF8-8AD4-B0AA2C13E746}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7688C1EA-6F40-4AF8-8AD4-B0AA2C13E746}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7688C1EA-6F40-4AF8-8AD4-B0AA2C13E746}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7688C1EA-6F40-4AF8-8AD4-B0AA2C13E746}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C815242F-EB63-4FA9-875E-E531F6E0F847}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C815242F-EB63-4FA9-875E-E531F6E0F847}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C815242F-EB63-4FA9-875E-E531F6E0F847}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C815242F-EB63-4FA9-875E-E531F6E0F847}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B56AD6B5-FEAC-466F-993C-A3932068CE2B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B56AD6B5-FEAC-466F-993C-A3932068CE2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B56AD6B5-FEAC-466F-993C-A3932068CE2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B56AD6B5-FEAC-466F-993C-A3932068CE2B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4D785FB-D15D-47F7-A10D-57A87849DA8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4D785FB-D15D-47F7-A10D-57A87849DA8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4D785FB-D15D-47F7-A10D-57A87849DA8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4D785FB-D15D-47F7-A10D-57A87849DA8A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
