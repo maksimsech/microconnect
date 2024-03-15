@@ -1,9 +1,17 @@
+using Mng.Microconnect.Extensions;
+using Mng.Microconnect.Server.Contract;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder
+    .AddMicroconnect()
+    .AddRabbitMq()
+    .AddServer<IServerMicroservice, ServiceMicroservice>();
 
 var app = builder.Build();
 
@@ -41,4 +49,13 @@ app.Run();
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+}
+
+
+class ServiceMicroservice : IServerMicroservice
+{
+    public Task<string> GetMessageAsync(string toWhom, string by)
+    {
+        return Task.FromResult("Hello, world!");
+    }
 }

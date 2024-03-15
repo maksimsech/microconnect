@@ -1,6 +1,6 @@
 namespace Mng.Microconnect.Core.Client;
 
-public interface IMicroserviceInterceptor
+public interface IMicroserviceInterceptor<T>
 {
     
 }

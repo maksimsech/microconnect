@@ -13,6 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Mng.Microconnect.Server.Contract\Mng.Microconnect.Server.Contract.csproj" />
       <ProjectReference Include="..\Mng.Microconnect\Mng.Microconnect.csproj" />
     </ItemGroup>
 

@@ -1,24 +1,30 @@
 using System.Collections.Concurrent;
-using System.Text.Json;
 using Castle.DynamicProxy;
+using Mng.Microconnect.RabbitMq;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 namespace Mng.Microconnect.Core.Client;
 
-internal sealed class MicroserviceInterceptor : IMicroserviceInterceptor, IInterceptor, IDisposable
+internal sealed class MicroserviceInterceptor<T> : IMicroserviceInterceptor<T>, IInterceptor, IDisposable
 {
     private readonly ConcurrentDictionary<string, MessageTaskCompletionSource> _completionSources = new();
     private readonly IModel _channel;
+    private readonly IMessageSerializer _messageSerializer;
     private readonly string _replyQueueName;
     private readonly string _microserviceQueueName;
 
-    internal MicroserviceInterceptor(IModel channel, Type microserviceInterface)
+    public MicroserviceInterceptor(
+        IModelProvider modelProvider, 
+        IMessageSerializer messageSerializer,
+        IMicroserviceQueueNameProvider microserviceQueueNameProvider
+    )
     {
-        _channel = channel;
+        _channel = modelProvider.GetModel();
+        _messageSerializer = messageSerializer;
 
         _replyQueueName = _channel.QueueDeclare().QueueName;
-        _microserviceQueueName = GetMicroserviceQueueName(microserviceInterface);
+        _microserviceQueueName = microserviceQueueNameProvider.GetMicroserviceQueueName(typeof(T));
 
         var consumer = new EventingBasicConsumer(_channel);
         consumer.Received += ConsumerOnReceived;
@@ -28,15 +34,15 @@ internal sealed class MicroserviceInterceptor : IMicroserviceInterceptor, IInter
     {
         var returnType = invocation.Method.ReturnType;
 
-        // if (!(typeof(Task).IsAssignableFrom(returnType) && returnType.IsGenericType))
-        // {
-        //     throw new NotImplementedException("Method should return generic task.");
-        // }
+        if (returnType.GetGenericTypeDefinition() != typeof(Task<>) || !returnType.IsGenericType)
+        {
+            throw new NotImplementedException("Method should return generic task.");
+        }
         
         // TODO: Configure continuation to run on separate thread
         var tcsType = typeof(TaskCompletionSource<>)
             .MakeGenericType(returnType.GetGenericArguments()[0]);
-        var tcs = Activator.CreateInstance(tcsType);
+        var tcs = Activator.CreateInstance(tcsType, new object[] { TaskCreationOptions.RunContinuationsAsynchronously });
         invocation.ReturnValue = tcsType.GetProperty("Task")?.GetValue(tcs, null);
 
         var props = _channel.CreateBasicProperties();
@@ -50,7 +56,7 @@ internal sealed class MicroserviceInterceptor : IMicroserviceInterceptor, IInter
         cts.Token.Register(() => CancelCall(correlationId));
         
         _channel.BasicPublish(
-            exchange: string.Empty,
+            exchange: "",
             routingKey: _microserviceQueueName,
             basicProperties: props,
             body: GetRequestBody(invocation));
@@ -80,40 +86,14 @@ internal sealed class MicroserviceInterceptor : IMicroserviceInterceptor, IInter
         
         tsc.SetException(new Exception());
     }
-
-    private static string GetMicroserviceQueueName(Type type)
+    
+    private ReadOnlyMemory<byte> GetRequestBody(IInvocation invocation) => _messageSerializer.SerializeRequest(new Request
     {
-        if (!type.IsInterface)
-        {
-            throw new ArgumentException();
-        }
-
-        var name = type.Name;
-        name = name.StartsWith('I')
-            ? name.Substring(1, name.Length - 1)
-            : name;
-
-        name = RemovePostfix("Service");
-        name = RemovePostfix("Microservice");
-        
-        return name;
-
-        string RemovePostfix(string postfix) => name.EndsWith(postfix)
-            ? name[..^postfix.Length]
-            : name;
-    }
-
-    private static byte[] GetRequestBody(IInvocation invocation) =>
-        JsonSerializer.SerializeToUtf8Bytes(
-            new Request
-            {
-                MethodName = invocation.Method.Name,
-                Arguments = invocation.Arguments
-                    .Select(a => new Request.RequestArgument(a.GetType().FullName!, a))
-                    .ToList(),
-            },
-            JsonSerializerContext.Options
-        );
+        MethodName = invocation.Method.Name,
+        Arguments = invocation.Arguments
+            .Select(a => new Request.RequestArgument(a.GetType().FullName!, a))
+            .ToList(),
+    });
 
     public void Dispose()
     {

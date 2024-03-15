@@ -12,6 +12,7 @@ public class ModelProvider : IModelProvider, IDisposable
         {
             HostName = options.HostName,
             Port = options.Port,
+            DispatchConsumersAsync = true,
         };
 
         _connection = connectionFactory.CreateConnection();
