@@ -2,7 +2,7 @@ namespace Mng.Microconnect.Core;
 
 public class Response
 {
-    public object Data { get; set; }
+    public object? Data { get; init; }
     
-    public string Exception { get; set; }
+    public string? Exception { get; init; }
 }

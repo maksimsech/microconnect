@@ -1,58 +1,37 @@
+
 using System.Text;
-using System.Text.Json;
+using Newtonsoft.Json;
 
 namespace Mng.Microconnect.Core;
 
 internal sealed class MessageSerializer : IMessageSerializer
 {
-    public ReadOnlyMemory<byte> SerializeRequest(Request request) =>
-        JsonSerializer.SerializeToUtf8Bytes(
-            request,
-            JsonSerializerContext.Options
-        );
+    private static readonly JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings
+    {
+        TypeNameHandling = TypeNameHandling.All,
+    };
     
+    public ReadOnlyMemory<byte> SerializeRequest(Request request)
+    {
+        return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(request, Formatting.Indented, _jsonSerializerSettings));
+    }
+
     public Request DeserializeRequest(ReadOnlyMemory<byte> requestBytes)
     {
-        // TODO: Handle errors, nulls.
-        using var jsonDocument = JsonDocument.Parse(requestBytes);
+        var jsonString = Encoding.UTF8.GetString(requestBytes.Span);
 
-        var element = jsonDocument.RootElement;
-
-        var methodName = element.GetProperty("methodName").GetString()!;
-
-        var arguments = element
-            .GetProperty("arguments")
-            .EnumerateArray()
-            .Select(e =>
-            {
-                // TODO: Doesn't work with primitives
-                var typeString = e.GetProperty("type").GetString()!;
-                var type = Type.GetType(typeString);
-                var value = JsonSerializer.Deserialize(
-                    e.GetProperty("value").GetString()!,
-                    type!,
-                    JsonSerializerContext.Options
-                );
-                return new Request.RequestArgument(typeString, value!);
-            })
-            .ToList();
-        
-        
-        return new Request
-        {
-            MethodName = methodName,
-            Arguments = arguments,
-        };
+        return (Request)JsonConvert.DeserializeObject(jsonString, _jsonSerializerSettings)!;
     }
 
     public ReadOnlyMemory<byte> SerializeResponse(Response response)
     {
-        throw new NotImplementedException();
+        return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response, Formatting.Indented, _jsonSerializerSettings));
     }
     
     public Response DeserializeResponse(ReadOnlyMemory<byte> responseBytes)
     {
-        throw new NotImplementedException();
-    }
+        var jsonString = Encoding.UTF8.GetString(responseBytes.Span);
 
+        return (Response)JsonConvert.DeserializeObject(jsonString, _jsonSerializerSettings)!;
+    }
 }

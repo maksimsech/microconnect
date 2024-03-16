@@ -21,7 +21,7 @@ internal sealed class MicroserviceRequestRunner<T> : IMicroserviceRequestRunner<
             throw new NotSupportedException($"Method {request.MethodName} is not supported.");
         }
 
-        var parameters = request.Arguments.Select(a => a.Value).ToArray();
+        var parameters = request.Arguments.ToArray();
 
         await using var scope = _serviceScopeFactory.CreateAsyncScope();
         var microservice = scope.ServiceProvider.GetRequiredService(typeof(T));
@@ -36,8 +36,7 @@ internal sealed class MicroserviceRequestRunner<T> : IMicroserviceRequestRunner<
 
     private static MethodInfo? GetMethodToRun(Request request)
     {
-        // TODO: To much type parse... Smells..
-        var types = request.Arguments.Select(a => Type.GetType(a.Type)).ToArray();
+        var types = request.Arguments.Select(a => a.GetType()).ToArray();
         
         return typeof(T).GetMethod(
             request.MethodName,

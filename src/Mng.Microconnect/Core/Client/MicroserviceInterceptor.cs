@@ -26,8 +26,10 @@ internal sealed class MicroserviceInterceptor<T> : IMicroserviceInterceptor<T>, 
         _replyQueueName = _channel.QueueDeclare().QueueName;
         _microserviceQueueName = microserviceQueueNameProvider.GetMicroserviceQueueName(typeof(T));
 
-        var consumer = new EventingBasicConsumer(_channel);
+        var consumer = new AsyncEventingBasicConsumer(_channel);
         consumer.Received += ConsumerOnReceived;
+        
+        _channel.BasicConsume(consumer, _replyQueueName, true);
     }
 
     public void Intercept(IInvocation invocation)
@@ -64,16 +66,27 @@ internal sealed class MicroserviceInterceptor<T> : IMicroserviceInterceptor<T>, 
         _completionSources.TryAdd(correlationId, new MessageTaskCompletionSource(tcsType, tcs!));
     }
     
-    private void ConsumerOnReceived(object? sender, BasicDeliverEventArgs e)
+    private Task ConsumerOnReceived(object? sender, BasicDeliverEventArgs e)
     {
         if (!_completionSources.TryRemove(e.BasicProperties.CorrelationId, out var tsc))
         {
             // TODO: Something happened. Log
-            return;
+            return Task.CompletedTask;
         }
-        // TODO: Process
+
+        var body = e.Body;
+        var response = _messageSerializer.DeserializeResponse(body);
+
+        // TODO: Better exception handling
+        if (response.Exception is not null)
+        {
+            tsc.SetException(new Exception(response.Exception));
+            return Task.CompletedTask;
+        }
         
-        tsc.SetResult("new string()");
+        tsc.SetResult(response.Data!);
+        
+        return Task.CompletedTask;
     }
 
     private void CancelCall(string correlationId)
@@ -90,9 +103,7 @@ internal sealed class MicroserviceInterceptor<T> : IMicroserviceInterceptor<T>, 
     private ReadOnlyMemory<byte> GetRequestBody(IInvocation invocation) => _messageSerializer.SerializeRequest(new Request
     {
         MethodName = invocation.Method.Name,
-        Arguments = invocation.Arguments
-            .Select(a => new Request.RequestArgument(a.GetType().FullName!, a))
-            .ToList(),
+        Arguments = invocation.Arguments,
     });
 
     public void Dispose()
